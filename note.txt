@@ -1,0 +1,388 @@
+1. set up
+
+npm init -y, read doc
+npm install express, mongoose
+new file app.js
+requrie express, read express doc
+
+make models directory and campgrounds.js, export the model, read mongoose doc
+do const Schema = mongoose.Schema bc we use many times
+connect mongoose db in app.js and save it under a variable, need some mod
+	from doc,
+	"still have some issue", require model from model directory
+	"db on db once"
+
+mongod before nodemon app.js
+
+make seeds diretory
+get cities.js dataset of cities from internet (for location data)
+in seedsHelpers.js: array of places and descriptor to combine to become a
+	campground
+index.js: connect to db, combine stuff and make new campgrounds, use async
+	to add campgrounds, close connection after adding campgrounds, run node 
+	seeds/index.js
+to check, try show dbs, use my-yelp-camp, show collections,
+	db.campgrounds.find(), read crud mongodb docs
+
+npm install ejs
+set view engine to ejs, setup path join
+make views directory, home.ejs, app.get / render home
+
+make directory campgrounds inside views and start routing
+/campgrounds pass all campgrounds to index.ejs, for loop and display all
+	campgorund, remember to pass campgrounds in an obj, dont leave it as array
+
+/campgrounds/:id pass a campground to show.ejs, use req.params.id, req param
+	is route parameter (part of the url)
+in index.ejs, use href to /campgrounds/:id, show.ejs has href to /campgrounds
+
+
+/campgrounds/new render new.ejs, new.ejs has a form that sends post request, 
+	then write post /campgrounds, dont forget redirect, index.ejs should have
+	link to new
+make campground obj in new.ejs by doing name campground[title], 
+	campground[location]
+normally, req.body will be undefine, we need body parser, read express docs,
+	read extened: true part
+we have to write /campgrounds/new before /campgrounds/:id bc if vice versa, 
+	it will treat new as id
+
+
+npm install method override, read npm method override doc
+campgrounds/:id/edit render edit.ejs, eidt has a form submitting to put 
+	/campgrounds/:id, do method override because html dont have put method
+put /campgrounds/:id do mongoose find and update, then redirect
+remember to spread {...req.body.campground} to make a new obj?
+show should have link to edit, edit should have link to show
+
+delete /campgrounds/:id delete a campground and then redirrect, show.ejs
+	has form to delete, use method override
+
+-------------------------------------------------------------------------------------
+
+2. restruct route, MVC
+
+restructing route will clean up app.js significantly, read express router
+  	docs
+remember to put other things in routing files as well, such as require
+  	schema, error handling, async error handling, validating, requrie joi 
+  	for server validating, ...
+
+but by default we dont have access to :id in review router, we have to do 
+  	merge param in review route, read merge param express docs
+
+MVC (model-view-controller)
+creater controller folder, controller file export functions, require 
+	campground controller in campground route file and route call 
+	functions from controller instead of do stuff itself
+group similar route together, read router.route express docs
+
+do the same with users and reviews controller
+
+-------------------------------------------------------------------------------------
+
+3. styling, ejs-mate
+
+install ejs-mate, require, app.use, read doc
+add layout folder that include boilderplate, include bootstrap link and
+	bootstrap popper and js script
+put all content in a container (main)
+now replace all the redundant html stuff in campground ejs files with 1
+	line, read docs
+
+see bootstrap doc component navbar and google a footer
+add folder partials and add in navbar and footer, add include navbar and
+	footer in boilerplate
+
+build a more beautiful new form, col-6 offset-3 is a way to center, read
+  	bootstrap form docs
+read bootstrap doc for beautiful form
+read bootstrap form input group for dollar sign, use textarea for
+	description
+send data over by e.g. campground[price]
+
+edit form is the same with new form but we put campground value in input
+	area
+
+new show page, read bootstrap component card
+
+-------------------------------------------------------------------------------------
+
+4. error handling, joi
+
+if there is nothing, it will give back express default error handling, 
+	when we deploy we should show user error that look less disgusting, 
+	read document in express error handling page, err can be going to 
+	stupid link
+custom error handler just like other middleware but has 4 args: err, req, 
+	res, next
+one way to handle error is to define a new error class 
+a lot of time we have error, we want to response with error message and 
+	status, we dont want to write res.status over and over again, we want 
+	sth reusable
+default error hander of express look for status, message of error, we 
+	can look for error.header and error.stack as well
+
+we should deal with async custom error handling as well, it can be add 
+	new product without name, search of product that doesnt exist
+
+npm i joi
+
+-------------------------------------------------------------------------------------
+
+5. review model 
+
+add review model, this will be one to many relationship
+update campground model, reviews is array of obj id from review model, 
+	read mongoose populate docs, remember to require review in 
+	campground, otherwise very stupid
+
+in show.ejs: add review form, rating type range for the slide submit
+	to campgrounds/:id/reviews, make sure form fields aren empty
+read class validated form bootstrap
+
+in the submit path of the form, make new Review from the form body,
+	push to reviews array, save campground and review, then redirect
+
+now reviews is only array of objectId, in order to access review
+	attributes, we need to populate, populate in the show route, 
+	read populate docs
+
+styling for review, put it on the side, read card doc, col-6 doc
+
+delete campground/:id/reviews/:reviewId, we need camp id bc we need to
+	rm reference and the review itself
+we do delete form on the show page for each review
+use $pull operator, read mongo docs
+
+handle delete reviews when we delete campground, otherwise reviews are 
+	orphan, read mongoose pre, post, findOneAndDelete middleware docs
+findByIdAndDelete trigger findOneAndDelete
+implement this in models/campgrounds
+note: have to use findByIdAndDelete, otherwise it will not trigger 
+  	another middleware
+
+-------------------------------------------------------------------------------------
+
+6. authentication
+
+read express session docs, we should configure session cookie expires 
+  	and max age
+
+authentication: read bcrypt docs, genSalt docs
+passport local mongoose require passport local, passport local require
+	passport, npm install all 3
+now we understand authentication, we use passport to add auth to yelp,
+	it comes with other things like google, fb login, ...
+passport, passport local, passport local mongoose, passport fb, ...
+
+make user model, read passport local mongoose docs
+schema only need email required true, unique true, dont need pw and user 
+  	name, the plugin take care of it
+read passport, passport local and passport local mongoose doc to set up 
+  passport in app.js, read passport middleware, register method
+LocalStrategy is passport-local
+
+make users.js in router folder, users folder in views
+read passport local mongoose docs to register
+read passport doc for login route
+now after register we still have to log in manually, we will fix this
+passport has helper method login() on request or logout on request, put 
+  	it in user register route, this method requrie a callback, make a
+  	callback of parameter err or sth
+
+now do sth so that only login user can submit new campgrounds, passport 
+  has helper function (req.isAuthenticated) using session, this function
+  is not mentioned in docs
+this thing is buggy, try delete cookie in session config
+we have a new file middleware.js and implement isLoggedIn, we use this
+  	middleware to protect some campgrounds route, we also protect post 
+  	route so pp cannot use postman to submit campground without login
+
+make logout route read passport req.logout docs
+make new navbar to accomodate register, login, logout
+
+we want to not show login and regiser button when we already logged in,
+  	not show log out button when we not logged in
+passport has method req.user to show us info abt user, read docs
+have a middleware in app.js res.local.currentUser = req.user, then use
+  currentUser in navbar for conditional, read express res local docs
+
+now after login it render all campgrounds page, we try to redirect user 
+  	to the page before they login
+read express req.path, req.originalUrl, req.session.returnTo docs
+store originalUrl in the isLoggedIn middleware
+there might be no return to bc user might go to homepage and click login
+  	right away, in that case redirect to /campgrounds, implement this in 
+  	user login route
+
+-------------------------------------------------------------------------------------
+
+7. authorization
+
+add author to campground model, update seeds file, add autor, price, 
+  	description, then reseed
+campground route get id: to get reviews we need to popoulate, now we
+  	chain on populate author
+put author on show.ejs under description
+associate new campground with logged in user id when submit new 
+  	campground, bc author in campground is of type obj id
+
+now if sign in, we can still delete other people' camps
+in show ejs: if currentUser exist and equal to campground author then
+  	show edit and delete button, use .equals instead of ==
+
+we also protect our route in the backend
+in edit and delete campground route, we dont use findAndUpdate anymore, 
+	we need to find first and then check if it's okay to proceed, if not 
+	then flash dont have permission then redirrect. 
+	we do this on edit, delete, edit form
+put this authorization in an async middleware (isAuthor), put middleware 
+  	in edit, delete, form, ...
+
+each review should associate with an author, add in author field in 
+  	review model
+campground show ejs: if not log in then we dont want to show review 
+  	form
+we should also make sure we dont create review using postman, require
+  	isLoggedIn middleware in routes/reviews
+change review post route, add author
+
+now in campground show path, we replace populate reviews with populate
+  	obj of path: review and populate: obj of path author
+read populate across multi level mongoose
+if we want to scale efficient, we can store username on each review,
+  	but now we are just making a barebone app
+in show.ejs: use card subtitle to show username of owner of each 
+  	review
+if currentUser exist and he is author, show delete review button
+write middleware isReviewAuthor for review delete route authorization
+
+-------------------------------------------------------------------------------------
+
+8. star ratings
+ 
+star ratings, we could do a entity code (hex) for star, in the show 
+	ejs page we can make a loop to check from 1 to 5 star, but that is
+	stupid, we can use tool starability, read docs
+download file in  /public/stylesheet directory, include in boilerplate
+	so that everything include star, change name of star inputs to 
+	review[rating]
+remember app.use(express.static(__dirname + '/public')) to serve
+  	static file in public directory
+
+-------------------------------------------------------------------------------------
+
+9. image upload
+
+upload a file associate with campground
+we dont store image in mongo bc it is large, we use cloudinary 
+
+we can have file input field but info will not be sent properly
+normaly bc we use url encoded form, if we want upload image then need
+	enctype multipart form data (read mdn docs), put this and add input 
+  	of file type in new ejs, name is only images, not campground[images]
+
+cloudinary has cloud name and api key, we dont want to put it in our
+  	code and put our code on github
+we store it in .env and dont include it on github, install dotenv, read 
+	dotenv docs, store cloud name, api key, api secret and access through
+	process.env.sth
+in app.js: if we are not in production (in development mode), require 
+	dotenv package, in production there is another way to add
+
+npm install multer, read docs, dest is the destination of the uploaded 
+	file, we can also use local storage, aws, cloudinary, ..., put this
+	setup in route file, dest will be "storage" later on
+read cloudinary get started docs abt config, make index.js inside 
+	cloudinary folder
+install multer storage cloudinary, read docs abt options params, folder, 
+	allowed formats, put this setup in index in cloudinary folder, export 
+	cloudinary and storage
+
+in post new campground route, do the upload middleware, read multer docs
+	and console.log, now req.body and req.files will show cloudinary path 
+if we export an obj of many things, remember the bracket when deconstruct
+
+we want to store path and file name in mongoose images
+add image schema, add array of img schema to campground schema
+joi validation will be messed up at this point, it runs before multer 
+	upload. now we put upload before validate but in production we should 
+	not do it
+create campground in campground controllers: , we can map req files 
+	attributes into array of obj of path and filename
+campground show ejs: now we use img url to display image, use loop to 
+	display all img
+
+disply all img in a carousel, read bootstrap docs
+use foreach to get the index to decide the active image, read docs
+on campground with only 1 img, we dont want the arrow indicator
+
+update seeds so that we dont have campgrounds with no img
+fix index ejs (show all campground), read horizontal card bootstrap
+  	docs
+
+upload picture to edit ejs
+change form encoding type, add image upload middleware to route
+update campground controller, add img and save, it should push instead
+	of overwrite everything, we should not push an array to another array,
+	use spread operator to do it, remember to save afterwards, remember to map 
+	req.files into sth first instead of just spread and push
+
+in edit ejs, we want to delete images as well as adding them
+add a checkbox to delete for each img, read bootstrap thumbnail docs 
+	and bootstrap checkbox docs, each check box has name of deleteFilenames[]
+	and value of file name so that req.body.deleteFilenames will show all
+	filename we want to delete
+we want to delete in the mongo and we want to unhost img in the cloudinary,
+  	read $pull docs and destroy cloudinary docs 
+only delete if there is deleteFilename, and upload when there is req.files
+
+-------------------------------------------------------------------------------------
+
+10. deploy
+
+we use mongo atlas for cloud db
+create account, create cluster, create username and pw, listing ip addr 
+	to access cluster (network access), connect cluster to application, copy 
+	the thing and paste in .env
+copoy the cluster connect url to DB_URL .env and make mongoose connect to 
+  	that thing
+we dont want to always use atlas db (in dev mode we use local)
+
+default storage for session is in memory, it does not scale well, we 
+  	use connect-mongo, read doc, ...
+create a store variable and change session config to store in mongo
+touch after is time period to update if sth change, read doc
+we have option to look for error when session store
+now mongo db show collections will show session, campgrounds, reviews, 
+  	users
+now we have mongo store instead of the memory store
+
+use heroku to deploy app
+install heroky cli, read doc
+heroku login, go to top level of app and heroku create
+make change to dbUrl, make change to secret
+make a file .gitignore so that git dont push that stuff
+try git remote -v, it is url we push our code to
+git add, git commit, git push heroku master 
+
+build suceed but we still see error on heroku app
+heroku logs --tail
+heroku dont know what to do with our app, normally we do nodemon 
+	app.js, we have to tell heroku how to start our app, add a script in 
+	package.json, change name in package.json to not uppercase, normally
+	name is not uppercase
+npm start will run the script and start our app
+we need to change the port we serving on 
+
+now we have problem cannot create client without access token
+this is bc our environment variables are not configured
+the way we config env in local is dotenv, we dont do it in heroku
+go to heroku dashboard setting, config variables, add all variables
+	manually, including dbUrl, secret, mapbox token, ..., we can do
+	heroku config:set on terminal as well
+we have 1 more problem, we are trying to access atlas db (from a IP 
+	that is not whitelisted), now go to atlas and allow access from 
+	anywhere
+we can do heroku restart and everything is here
