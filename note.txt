@@ -181,7 +181,7 @@ schema only need email required true, unique true, dont need pw and user
   	name, the plugin take care of it
 read passport, passport local and passport local mongoose doc to set up 
   passport in app.js, read passport middleware, register method
-LocalStrategy is passport-local
+LocalStrategy in passport-local
 
 make users.js in router folder, users folder in views
 read passport local mongoose docs to register
@@ -294,22 +294,22 @@ in app.js: if we are not in production (in development mode), require
 npm install multer, read docs, dest is the destination of the uploaded 
 	file, we can also use local storage, aws, cloudinary, ..., put this
 	setup in route file, dest will be "storage" later on
-read cloudinary get started docs abt config, make index.js inside 
-	cloudinary folder
-install multer storage cloudinary, read docs abt options params, folder, 
-	allowed formats, put this setup in index in cloudinary folder, export 
-	cloudinary and storage
+read cloudinary get started docs abt config, put this in cloudinary/
+	index.js
+install multer storage cloudinary, read docs abt options params {folder, 
+	allowed formats}, put this setup in cloudinary/index.js, export 
+	cloudinary and storage, replace { dest: 'uploads/' } with { storage }
+if we export an obj of many things, remember the bracket when deconstruct
 
 in post new campground route, do the upload middleware, read multer docs
 	and console.log, now req.body and req.files will show cloudinary path 
-if we export an obj of many things, remember the bracket when deconstruct
 
 we want to store path and file name in mongoose images
 add image schema, add array of img schema to campground schema
 joi validation will be messed up at this point, it runs before multer 
 	upload. now we put upload before validate but in production we should 
 	not do it
-create campground in campground controllers: , we can map req files 
+create campground in campground controllers: we can map req files 
 	attributes into array of obj of path and filename
 campground show ejs: now we use img url to display image, use loop to 
 	display all img
@@ -360,7 +360,7 @@ now mongo db show collections will show session, campgrounds, reviews,
 now we have mongo store instead of the memory store
 
 use heroku to deploy app
-install heroky cli, read doc
+install heroku cli, read doc
 heroku login, go to top level of app and heroku create
 make change to dbUrl, make change to secret
 make a file .gitignore so that git dont push that stuff
